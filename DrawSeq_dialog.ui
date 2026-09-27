@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>SetupDialogBase</class>
+ <widget class="QDialog" name="SetupDialogBase">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>280</width>
+    <height>190</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>DrawSeq – Setup</string>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>280</width>
+    <height>190</height>
+   </size>
+  </property>
+  <layout class="QVBoxLayout" name="mainLayout">
+   <property name="spacing">
+    <number>10</number>
+   </property>
+   <property name="leftMargin">
+    <number>16</number>
+   </property>
+   <property name="topMargin">
+    <number>16</number>
+   </property>
+   <property name="rightMargin">
+    <number>16</number>
+   </property>
+   <property name="bottomMargin">
+    <number>16</number>
+   </property>
+
+   <!-- Title label -->
+   <item>
+    <widget class="QLabel" name="titleLabel">
+     <property name="text">
+      <string>&lt;b&gt;DrawSeq — Sequence Numbering&lt;/b&gt;</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignHCenter</set>
+     </property>
+    </widget>
+   </item>
+
+   <!-- Horizontal rule / separator -->
+   <item>
+    <widget class="QFrame" name="line">
+     <property name="frameShape">
+      <enum>QFrame::HLine</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Sunken</enum>
+     </property>
+    </widget>
+   </item>
+
+   <!-- Layer selection row -->
+   <item>
+    <layout class="QHBoxLayout" name="layerRow">
+     <item>
+      <widget class="QLabel" name="layerLabel">
+       <property name="text">
+        <string>Target layer:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QComboBox" name="layerComboBox">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+         <horstretch>1</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="toolTip">
+        <string>Select the vector layer whose features will be numbered</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+
+   <!-- Field selection row -->
+   <item>
+    <layout class="QHBoxLayout" name="fieldRow">
+     <item>
+      <widget class="QLabel" name="fieldLabel">
+       <property name="text">
+        <string>Target field:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QComboBox" name="fieldComboBox">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+         <horstretch>1</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="toolTip">
+        <string>Select an existing field or type a new one to store sequence numbers</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+
+   <!-- Selected-only checkbox -->
+   <item>
+    <widget class="QCheckBox" name="selectedOnlyCheckBox">
+     <property name="text">
+      <string>Number selected features only</string>
+     </property>
+     <property name="toolTip">
+      <string>When checked, only the currently selected features in the layer will be considered for numbering</string>
+     </property>
+    </widget>
+   </item>
+
+   <!-- Spacer -->
+   <item>
+    <spacer name="verticalSpacer">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>10</height>
+      </size>
+     </property>
+    </spacer>
+   </item>
+
+   <!-- Bottom button row: Help + Start Drawing -->
+   <item>
+    <layout class="QHBoxLayout" name="bottomButtonRow">
+     <item>
+      <widget class="QPushButton" name="helpButton">
+       <property name="text">
+        <string>❓ Help</string>
+       </property>
+       <property name="toolTip">
+        <string>Show the quick-start guide for the DrawSeq tool</string>
+       </property>
+       <property name="maximumWidth">
+        <number>80</number>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="buttonSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="startDrawingButton">
+       <property name="text">
+        <string>▶  Start Drawing</string>
+       </property>
+       <property name="toolTip">
+        <string>Close this dialog and activate the drawing tool on the map canvas</string>
+       </property>
+       <property name="default">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

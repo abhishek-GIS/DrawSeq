@@ -1,0 +1,17 @@
+[general]
+name=DrawSeq
+qgisMinimumVersion=3.0
+description=Draw paths on the map canvas to assign sequence numbers to vector features.
+version=2.0.0
+author=Abhishek Bahlare
+email=abhishekbhalare@gmail.com
+about=DrawSeq lets you interactively draw one or more paths over a vector layer. Features intersected by each path are assigned sequential numbers in a 'sequence_no' attribute, ordered by their position along the path. Supports multi-segment paths, vertex dragging, middle-click direction reversal, and numbering selected features only.
+tracker=https://github.com/abhishek-GIS/DrawSeq/issues
+repository=https://github.com/abhishek-GIS/DrawSeq
+homepage=https://github.com/abhishek-GIS/DrawSeq
+tags=sequence,numbering,vector,editing,attribute
+icon=icon.png
+experimental=False
+deprecated=False
+category=Vector
+hasProcessingProvider=no
