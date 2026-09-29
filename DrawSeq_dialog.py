@@ -61,7 +61,7 @@ class SetupDialog(QDialog, FORM_CLASS):
         # Populate the layer combo-box
         self.layerComboBox.clear()
         for layer in QgsProject.instance().mapLayers().values():
-            if layer.type() == QgsMapLayer.VectorLayer:
+            if layer.type() == QgsMapLayer.LayerType.VectorLayer:
                 self.layerComboBox.addItem(layer.name(), layer.id())
 
         # Wire buttons
@@ -72,19 +72,19 @@ class SetupDialog(QDialog, FORM_CLASS):
         """Make combo boxes searchable with autocomplete capabilities."""
         # Layer ComboBox - Searchable, but don't allow typing non-existent layers
         self.layerComboBox.setEditable(True)
-        self.layerComboBox.setInsertPolicy(QComboBox.NoInsert)
+        self.layerComboBox.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
         layer_completer = self.layerComboBox.completer()
         if layer_completer:
-            layer_completer.setCompletionMode(QCompleter.PopupCompletion)
-            layer_completer.setFilterMode(Qt.MatchContains)
+            layer_completer.setCompletionMode(QCompleter.CompletionMode.PopupCompletion)
+            layer_completer.setFilterMode(Qt.MatchFlag.MatchContains)
 
         # Field ComboBox - Searchable, allows typing new field names
         self.fieldComboBox.setEditable(True)
-        self.fieldComboBox.setInsertPolicy(QComboBox.InsertAtBottom)
+        self.fieldComboBox.setInsertPolicy(QComboBox.InsertPolicy.InsertAtBottom)
         field_completer = self.fieldComboBox.completer()
         if field_completer:
-            field_completer.setCompletionMode(QCompleter.PopupCompletion)
-            field_completer.setFilterMode(Qt.MatchContains)
+            field_completer.setCompletionMode(QCompleter.CompletionMode.PopupCompletion)
+            field_completer.setFilterMode(Qt.MatchFlag.MatchContains)
 
     def _update_fields(self):
         """Update the field dropdown based on the currently selected layer."""
@@ -111,11 +111,11 @@ class SetupDialog(QDialog, FORM_CLASS):
         """Display the quick-guide in a scrollable message box."""
         dlg = QMessageBox(self)
         dlg.setWindowTitle("DrawSeq — Quick Guide")
-        dlg.setTextFormat(Qt.RichText)
+        dlg.setTextFormat(Qt.TextFormat.RichText)
         dlg.setText(HELP_TEXT)
-        dlg.setIcon(QMessageBox.Information)
-        dlg.setStandardButtons(QMessageBox.Ok)
-        dlg.exec_()
+        dlg.setIcon(QMessageBox.Icon.Information)
+        dlg.setStandardButtons(QMessageBox.StandardButton.Ok)
+        dlg.exec()
 
     # ------------------------------------------------------------------
     # Getters used by DrawSeq_plugin.run()
