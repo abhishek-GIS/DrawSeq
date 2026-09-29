@@ -5,8 +5,8 @@ Main plugin class — registers the toolbar action and wires the setup dialog.
 """
 
 import os
-from qgis.PyQt.QtWidgets import QAction, QMessageBox
-from qgis.PyQt.QtGui import QIcon
+from qgis.PyQt.QtWidgets import QMessageBox
+from qgis.PyQt.QtGui import QIcon, QAction
 from qgis.core import QgsProject, QgsMapLayer
 
 from .DrawSeq_dialog import SetupDialog
@@ -68,7 +68,7 @@ class DrawSeqPlugin:
         # Guard: at least one vector layer must be loaded
         vector_layers = [
             l for l in QgsProject.instance().mapLayers().values()
-            if l.type() == QgsMapLayer.VectorLayer
+            if l.type() == QgsMapLayer.LayerType.VectorLayer
         ]
         if not vector_layers:
             QMessageBox.warning(
@@ -80,7 +80,7 @@ class DrawSeqPlugin:
             return
 
         dlg = SetupDialog(self.iface.mainWindow())
-        if dlg.exec_():
+        if dlg.exec():
             layer_id = dlg.get_layer_id()
             if not layer_id:
                 QMessageBox.warning(self.iface.mainWindow(), "DrawSeq", "Please select a valid layer.")
@@ -106,6 +106,5 @@ class DrawSeqPlugin:
                 )
                 return
 
-            # EXACT POINT OF FAILURE AVOIDED HERE
             tool = SequenceNumberingTool(self.canvas, target_layer, target_field, selected_only)
             self.canvas.setMapTool(tool)
