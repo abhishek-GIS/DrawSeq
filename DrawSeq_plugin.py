@@ -5,33 +5,30 @@ Main plugin class — registers the toolbar action and wires the setup dialog.
 """
 
 import os
-from qgis.PyQt.QtWidgets import QMessageBox
-from qgis.PyQt.QtGui import QIcon, QAction
+from qgis.PyQt.QtWidgets import QAction, QMessageBox
+from qgis.PyQt.QtGui import QIcon
+from qgis.PyQt.QtCore import Qt
 from qgis.core import QgsProject, QgsMapLayer
 
 from .DrawSeq_dialog import SetupDialog
 from .DrawSeq_algorithm import SequenceNumberingTool
+
+# PyQt5 / PyQt6 Compatibility Block
+try:
+    STAYS_ON_TOP = Qt.WindowType.WindowStaysOnTopHint
+except AttributeError:
+    STAYS_ON_TOP = Qt.WindowStaysOnTopHint
 
 
 class DrawSeqPlugin:
     """QGIS Plugin Implementation for DrawSeq."""
 
     def __init__(self, iface):
-        """
-        Constructor.
-
-        :param iface: QGIS interface instance.
-        :type iface: QgsInterface
-        """
         self.iface = iface
         self.canvas = iface.mapCanvas()
         self.plugin_dir = os.path.dirname(__file__)
         self.action = None
-        self.toolbar = None
-
-    # ------------------------------------------------------------------
-    # Plugin lifecycle
-    # ------------------------------------------------------------------
+        self.dlg = None
 
     def initGui(self):
         """Create the menu entry and toolbar button inside QGIS GUI."""
@@ -42,33 +39,21 @@ class DrawSeqPlugin:
         self.action.setToolTip("Draw paths to assign sequence numbers to vector features")
         self.action.triggered.connect(self.run)
 
-        # Add to Vector menu and a dedicated toolbar
+        # Add to standard QGIS Toolbar and Vector Menu
+        self.iface.addToolBarIcon(self.action)
         self.iface.addPluginToVectorMenu("&DrawSeq", self.action)
-        self.toolbar = self.iface.addToolBar("DrawSeq")
-        self.toolbar.setObjectName("DrawSeqToolbar")
-        self.toolbar.addAction(self.action)
 
     def unload(self):
-        """Remove the plugin menu item and toolbar on unload."""
-        self.iface.removePluginVectorMenu("&DrawSeq", self.action)
-        
-        if self.toolbar:
-            self.toolbar.clear() # Clear actions safely
-            self.iface.mainWindow().removeToolBar(self.toolbar)
-            self.toolbar.setParent(None) # Instantly detaches from QGIS main window
-            self.toolbar.deleteLater()
-            self.toolbar = None
-
-    # ------------------------------------------------------------------
-    # Main entry point
-    # ------------------------------------------------------------------
+        """Remove the plugin menu item and toolbar icon on unload."""
+        if self.action:
+            self.iface.removeToolBarIcon(self.action)
+            self.iface.removePluginVectorMenu("&DrawSeq", self.action)
 
     def run(self):
-        """Show the setup dialog and, on acceptance, activate the map tool."""
-        # Guard: at least one vector layer must be loaded
+        """Show the setup dialog as a floating, non-modal window."""
         vector_layers = [
             l for l in QgsProject.instance().mapLayers().values()
-            if l.type() == QgsMapLayer.LayerType.VectorLayer
+            if l.type() == QgsMapLayer.VectorLayer
         ]
         if not vector_layers:
             QMessageBox.warning(
@@ -79,32 +64,37 @@ class DrawSeqPlugin:
             )
             return
 
-        dlg = SetupDialog(self.iface.mainWindow())
-        if dlg.exec():
-            layer_id = dlg.get_layer_id()
-            if not layer_id:
-                QMessageBox.warning(self.iface.mainWindow(), "DrawSeq", "Please select a valid layer.")
-                return
-                
-            target_layer = QgsProject.instance().mapLayer(layer_id)
-            target_field = dlg.get_field_name()
-            selected_only = dlg.get_selected_only()
+        if self.dlg:
+            self.dlg.close()
+            self.dlg.deleteLater()
 
-            if target_layer is None:
-                QMessageBox.warning(
-                    self.iface.mainWindow(),
-                    "DrawSeq",
-                    "Could not retrieve the selected layer."
-                )
-                return
-                
-            if not target_field:
-                QMessageBox.warning(
-                    self.iface.mainWindow(),
-                    "DrawSeq",
-                    "Please specify a target field to store the sequence numbers."
-                )
-                return
+        self.dlg = SetupDialog(self.iface.mainWindow())
+        self.dlg.setWindowFlags(self.dlg.windowFlags() | STAYS_ON_TOP)
+        self.dlg.accepted.connect(self._start_drawing_tool)
+        self.dlg.show()
+        self.dlg.raise_()
+        self.dlg.activateWindow()
 
-            tool = SequenceNumberingTool(self.canvas, target_layer, target_field, selected_only)
-            self.canvas.setMapTool(tool)
+    def _start_drawing_tool(self):
+        """Triggered when the user clicks 'Start Drawing' in the dialog."""
+        if not self.dlg:
+            return
+            
+        layer_id = self.dlg.get_layer_id()
+        if not layer_id:
+            QMessageBox.warning(self.iface.mainWindow(), "DrawSeq", "Please select a valid layer.")
+            return
+            
+        target_layer = QgsProject.instance().mapLayer(layer_id)
+        selected_only = self.dlg.get_selected_only()
+
+        if target_layer is None:
+            QMessageBox.warning(
+                self.iface.mainWindow(),
+                "DrawSeq",
+                "Could not retrieve the selected layer."
+            )
+            return
+
+        tool = SequenceNumberingTool(self.canvas, target_layer, selected_only)
+        self.canvas.setMapTool(tool)
