@@ -5,19 +5,13 @@ Main plugin class — registers the toolbar action and wires the setup dialog.
 """
 
 import os
-from qgis.PyQt.QtWidgets import QAction, QMessageBox
-from qgis.PyQt.QtGui import QIcon
+from qgis.PyQt.QtWidgets import QMessageBox
+from qgis.PyQt.QtGui import QIcon, QAction
 from qgis.PyQt.QtCore import Qt
 from qgis.core import QgsProject, QgsMapLayer
 
 from .DrawSeq_dialog import SetupDialog
 from .DrawSeq_algorithm import SequenceNumberingTool
-
-# PyQt5 / PyQt6 Compatibility Block
-try:
-    STAYS_ON_TOP = Qt.WindowType.WindowStaysOnTopHint
-except AttributeError:
-    STAYS_ON_TOP = Qt.WindowStaysOnTopHint
 
 
 class DrawSeqPlugin:
@@ -52,9 +46,10 @@ class DrawSeqPlugin:
     def run(self):
         """Show the setup dialog as a floating, non-modal window."""
         vector_layers = [
-            l for l in QgsProject.instance().mapLayers().values()
-            if l.type() == QgsMapLayer.VectorLayer
+            layer for layer in QgsProject.instance().mapLayers().values()
+            if layer.type() == QgsMapLayer.LayerType.VectorLayer
         ]
+        
         if not vector_layers:
             QMessageBox.warning(
                 self.iface.mainWindow(),
@@ -69,7 +64,7 @@ class DrawSeqPlugin:
             self.dlg.deleteLater()
 
         self.dlg = SetupDialog(self.iface.mainWindow())
-        self.dlg.setWindowFlags(self.dlg.windowFlags() | STAYS_ON_TOP)
+        self.dlg.setWindowFlags(self.dlg.windowFlags() | Qt.WindowType.WindowStaysOnTopHint)
         self.dlg.accepted.connect(self._start_drawing_tool)
         self.dlg.show()
         self.dlg.raise_()
