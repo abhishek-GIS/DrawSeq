@@ -10,22 +10,6 @@ from qgis.PyQt.QtWidgets import QDialog, QMessageBox, QCompleter, QComboBox
 from qgis.PyQt.QtCore import Qt
 from qgis.core import QgsProject, QgsMapLayer
 
-# PyQt5 / PyQt6 Compatibility Block
-try:
-    NO_INSERT = QComboBox.InsertPolicy.NoInsert
-    POPUP_COMPLETION = QCompleter.CompletionMode.PopupCompletion
-    MATCH_CONTAINS = Qt.MatchFlag.MatchContains
-    MSG_ICON_INFO = QMessageBox.Icon.Information
-    MSG_BTN_OK = QMessageBox.StandardButton.Ok
-    TEXT_FMT_RICH = Qt.TextFormat.RichText # QGIS 4 / PyQt6
-except AttributeError:
-    NO_INSERT = QComboBox.NoInsert
-    POPUP_COMPLETION = QCompleter.PopupCompletion
-    MATCH_CONTAINS = Qt.MatchContains
-    MSG_ICON_INFO = QMessageBox.Information
-    MSG_BTN_OK = QMessageBox.Ok
-    TEXT_FMT_RICH = Qt.RichText # QGIS 3 / PyQt5
-
 # Load the .ui file at import time
 FORM_CLASS, _ = uic.loadUiType(
     os.path.join(os.path.dirname(__file__), 'DrawSeq_dialog.ui')
@@ -66,7 +50,7 @@ class SetupDialog(QDialog, FORM_CLASS):
 
         self.layerComboBox.clear()
         for layer in QgsProject.instance().mapLayers().values():
-            if layer.type() == QgsMapLayer.VectorLayer:
+            if layer.type() == QgsMapLayer.LayerType.VectorLayer:
                 self.layerComboBox.addItem(layer.name(), layer.id())
 
         self.startDrawingButton.clicked.connect(self.accept)
@@ -75,20 +59,20 @@ class SetupDialog(QDialog, FORM_CLASS):
     def _setup_autocomplete(self):
         """Make combo box searchable."""
         self.layerComboBox.setEditable(True)
-        self.layerComboBox.setInsertPolicy(NO_INSERT)
+        self.layerComboBox.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
         layer_completer = self.layerComboBox.completer()
         if layer_completer:
-            layer_completer.setCompletionMode(POPUP_COMPLETION)
-            layer_completer.setFilterMode(MATCH_CONTAINS)
+            layer_completer.setCompletionMode(QCompleter.CompletionMode.PopupCompletion)
+            layer_completer.setFilterMode(Qt.MatchFlag.MatchContains)
 
     def _show_help(self):
         """Display the quick-guide."""
         dlg = QMessageBox(self)
         dlg.setWindowTitle("DrawSeq — Quick Guide")
-        dlg.setTextFormat(TEXT_FMT_RICH)
+        dlg.setTextFormat(Qt.TextFormat.RichText)
         dlg.setText(HELP_TEXT)
-        dlg.setIcon(MSG_ICON_INFO)
-        dlg.setStandardButtons(MSG_BTN_OK)
+        dlg.setIcon(QMessageBox.Icon.Information)
+        dlg.setStandardButtons(QMessageBox.StandardButton.Ok)
         dlg.exec()
 
     def get_layer_id(self) -> str:
