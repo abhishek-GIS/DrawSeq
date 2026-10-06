@@ -3,10 +3,11 @@ name=DrawSeq
 qgisMinimumVersion=3.0
 qgisMaximumVersion=4.99
 description=Draw paths on the map canvas to assign sequence numbers to vector features. Features are numbered perfectly by "First Touch" intersection.
-version=1.5.2
+version=1.5.3
 author=Abhishek Bhalare
 email=abhishekbhalare@gmail.com
-about=DrawSeq is a fast and easy tool that lets you draw lines across map features to instantly assign them sequence numbers in the exact order you draw them.tracker=https://github.com/abhishek-GIS/DrawSeq/issues
+about=DrawSeq is a fast and easy tool that lets you draw lines across map features to instantly assign them sequence numbers in the exact order you draw them.
+tracker=https://github.com/abhishek-GIS/DrawSeq/issues
 repository=https://github.com/abhishek-GIS/DrawSeq
 homepage=https://github.com/abhishek-GIS/DrawSeq
 tags=sequence,numbering,vector,editing,attribute
