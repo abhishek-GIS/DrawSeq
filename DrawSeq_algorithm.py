@@ -21,70 +21,16 @@ from qgis.core import (
     QgsField, QgsSpatialIndex, QgsPointXY,
     QgsPalLayerSettings, QgsVectorLayerSimpleLabeling, QgsTextFormat,
     QgsTextBufferSettings, QgsTextBackgroundSettings, Qgis,
-    QgsCoordinateTransform, QgsProject, QgsUnitTypes, QgsApplication,
-    QgsSettings
+    QgsCoordinateTransform, QgsProject, QgsApplication,
+    QgsSettings, QgsMessageLog
 )
 from qgis.gui import QgsMapTool, QgsRubberBand
-
-# PyQt5 / PyQt6 Compatibility Block
-try:
-    STAYS_ON_TOP = Qt.WindowType.WindowStaysOnTopHint
-    KEY_DELETE = Qt.Key.Key_Delete
-    KEY_BACKSPACE = Qt.Key.Key_Backspace
-    KEY_Z = Qt.Key.Key_Z
-    MOD_CTRL = Qt.KeyboardModifier.ControlModifier
-    BTN_LEFT = Qt.MouseButton.LeftButton
-    BTN_RIGHT = Qt.MouseButton.RightButton
-    BTN_MIDDLE = Qt.MouseButton.MiddleButton
-    LINE_DASH = Qt.PenStyle.DashLine
-    LINE_SOLID = Qt.PenStyle.SolidLine
-    STATE_CHECKED = Qt.CheckState.Checked
-    FRAME_HLINE = QFrame.Shape.HLine
-    FRAME_SUNKEN = QFrame.Shadow.Sunken
-    FRAME_PLAIN = QFrame.Shadow.Plain
-    FRAME_NOFRAME = QFrame.Shape.NoFrame
-    FONT_WEIGHT_BOLD = QFont.Weight.Bold  
-    POLICY_EXPANDING = QSizePolicy.Policy.Expanding
-    POLICY_FIXED = QSizePolicy.Policy.Fixed
-except AttributeError:
-    STAYS_ON_TOP = Qt.WindowStaysOnTopHint
-    KEY_DELETE = Qt.Key_Delete
-    KEY_BACKSPACE = Qt.Key_Backspace
-    KEY_Z = Qt.Key_Z
-    MOD_CTRL = Qt.ControlModifier
-    BTN_LEFT = Qt.LeftButton
-    BTN_RIGHT = Qt.RightButton
-    BTN_MIDDLE = Qt.MiddleButton
-    LINE_DASH = Qt.DashLine
-    LINE_SOLID = Qt.SolidLine
-    STATE_CHECKED = Qt.Checked
-    FRAME_HLINE = QFrame.HLine
-    FRAME_SUNKEN = QFrame.Sunken
-    FRAME_PLAIN = QFrame.Plain
-    FRAME_NOFRAME = QFrame.NoFrame
-    FONT_WEIGHT_BOLD = QFont.Bold  
-    POLICY_EXPANDING = QSizePolicy.Expanding
-    POLICY_FIXED = QSizePolicy.Fixed
-
-try:
-    TYPE_STRING = QVariant.String
-    TYPE_INT = QVariant.Int
-    TYPE_UINT = QVariant.UInt
-    TYPE_LONGLONG = QVariant.LongLong
-    TYPE_DOUBLE = QVariant.Double
-except AttributeError:
-    from qgis.PyQt.QtCore import QMetaType
-    TYPE_STRING = QMetaType.Type.QString
-    TYPE_INT = QMetaType.Type.Int
-    TYPE_UINT = QMetaType.Type.UInt
-    TYPE_LONGLONG = QMetaType.Type.LongLong
-    TYPE_DOUBLE = QMetaType.Type.Double
 
 
 class SmartSpinBox(QSpinBox):
     def keyPressEvent(self, event):
         super().keyPressEvent(event)
-        if event.key() in (KEY_BACKSPACE, KEY_DELETE):
+        if event.key() in (Qt.Key.Key_Backspace, Qt.Key.Key_Delete):
             if self.lineEdit().text().strip() == "":
                 self.setValue(self.minimum())
                 self.lineEdit().selectAll()
@@ -132,7 +78,7 @@ class MultiLineDialog(QDialog):
         
         self.field_combo = QComboBox()
         self.field_combo.setEditable(True)
-        self.field_combo.setSizePolicy(POLICY_EXPANDING, POLICY_FIXED)
+        self.field_combo.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         for f in self.layer.fields():
             self.field_combo.addItem(f.name())
             
@@ -150,7 +96,7 @@ class MultiLineDialog(QDialog):
         pattern_layout.addWidget(lbl_pattern)
         
         self.pattern_combo = QComboBox()
-        self.pattern_combo.setSizePolicy(POLICY_EXPANDING, POLICY_FIXED)
+        self.pattern_combo.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.pattern_combo.addItems([
             "Sequential (1, 2, 3...)", 
             "Odd Numbers (1, 3, 5...)", 
@@ -179,7 +125,7 @@ class MultiLineDialog(QDialog):
         paths_layout.setContentsMargins(5, 15, 5, 5)
 
         scroll = QScrollArea()
-        scroll.setFrameShape(FRAME_NOFRAME)
+        scroll.setFrameShape(QFrame.Shape.NoFrame)
         scroll_content = QWidget()
         
         self.grid_layout = QGridLayout(scroll_content)
@@ -336,8 +282,8 @@ class MultiLineDialog(QDialog):
 
             if i < len(self._line_data) - 1:
                 div = QFrame()
-                div.setFrameShape(FRAME_HLINE)
-                div.setFrameShadow(FRAME_PLAIN)
+                div.setFrameShape(QFrame.Shape.HLine)
+                div.setFrameShadow(QFrame.Shadow.Plain)
                 div.setStyleSheet("color: #e0e0e0;")
                 self.grid_layout.addWidget(div, row_idx, 0, 1, 6) 
                 row_idx += 1
@@ -435,7 +381,7 @@ class MultiLineDialog(QDialog):
         self._recalculate_starts()
 
     def keyPressEvent(self, event):
-        if event.key() == KEY_DELETE and self.tool_ref is not None:
+        if event.key() == Qt.Key.Key_Delete and self.tool_ref is not None:
             sel = self.tool_ref.selected_idx
             if sel is not None and 0 <= sel < len(self._line_data):
                 data = self._line_data[sel]
@@ -445,7 +391,7 @@ class MultiLineDialog(QDialog):
         super().keyPressEvent(event)
 
     def _on_carry_changed(self, state, this_edit, prev_edit):
-        if state == STATE_CHECKED:
+        if state == Qt.CheckState.Checked:
             this_edit.setText(prev_edit.text())
             this_edit.setEnabled(False)
             prev_edit.textChanged.connect(this_edit.setText)
@@ -453,8 +399,8 @@ class MultiLineDialog(QDialog):
             this_edit.setEnabled(True)
             try:
                 prev_edit.textChanged.disconnect(this_edit.setText)
-            except RuntimeError:
-                pass
+            except RuntimeError as e:
+                QgsMessageLog.logMessage(f"DrawSeq disconnect info: {e}", "DrawSeq", Qgis.MessageLevel.Info)
 
     def _zoom_and_select(self, data, idx):
         extent = data['geom'].boundingBox()
@@ -527,30 +473,30 @@ class SequenceNumberingTool(QgsMapTool):
         self.active_arrow      = self._make_arrow_polygon(alpha=120)
 
     def _make_rubberband(self, color, dashed=False, width=3):
-        rb = QgsRubberBand(self.canvas, QgsWkbTypes.LineGeometry)
+        rb = QgsRubberBand(self.canvas, QgsWkbTypes.GeometryType.LineGeometry)
         rb.setColor(color)
         rb.setWidth(width)
         if dashed:
-            rb.setLineStyle(LINE_DASH)
+            rb.setLineStyle(Qt.PenStyle.DashLine)
         return rb
 
     def _make_arrow_polygon(self, alpha=255):
-        rb = QgsRubberBand(self.canvas, QgsWkbTypes.PolygonGeometry)
+        rb = QgsRubberBand(self.canvas, QgsWkbTypes.GeometryType.PolygonGeometry)
         rb.setColor(QColor(0, 0, 0, alpha))
         rb.setStrokeColor(QColor(255, 255, 255, alpha))
         rb.setWidth(1.5)
         return rb
 
     def _make_vertex_rb(self):
-        vrb = QgsRubberBand(self.canvas, QgsWkbTypes.PointGeometry)
-        vrb.setIcon(QgsRubberBand.ICON_FULL_BOX)
+        vrb = QgsRubberBand(self.canvas, QgsWkbTypes.GeometryType.PointGeometry)
+        vrb.setIcon(QgsRubberBand.IconType.ICON_FULL_BOX)
         vrb.setIconSize(7)
         vrb.setColor(self._NORMAL_VERTEX_BG)
         vrb.setSecondaryStrokeColor(self._NORMAL_VERTEX_FG)
         return vrb
 
     def _make_sel_rb(self):
-        srb = QgsRubberBand(self.canvas, QgsWkbTypes.LineGeometry)
+        srb = QgsRubberBand(self.canvas, QgsWkbTypes.GeometryType.LineGeometry)
         sel_color = QColor(self._SEL_LINE_COLOR)
         sel_color.setAlpha(160)
         srb.setColor(sel_color)
@@ -560,7 +506,7 @@ class SequenceNumberingTool(QgsMapTool):
     def _rebuild_vertex_dots(self, idx):
         data = self.finished_lines[idx]
         vrb  = data['vertex_rb']
-        vrb.reset(QgsWkbTypes.PointGeometry)
+        vrb.reset(QgsWkbTypes.GeometryType.PointGeometry)
         for pt in data['points']:
             vrb.addPoint(pt)
 
@@ -680,31 +626,22 @@ class SequenceNumberingTool(QgsMapTool):
             self.canvas.refresh()
 
     def _get_2m_in_units(self, crs):
-        try:
-            unit = crs.mapUnits()
-            if unit == Qgis.DistanceUnit.Degrees:
-                return 2.0 / 111319.49
-            elif unit == Qgis.DistanceUnit.Feet:
-                return 2.0 * 3.28084
-            else:
-                return 2.0
-        except AttributeError:
-            unit = crs.mapUnits()
-            if unit == QgsUnitTypes.DistanceDegrees:
-                return 2.0 / 111319.49
-            elif unit == QgsUnitTypes.DistanceFeet:
-                return 2.0 * 3.28084
-            else:
-                return 2.0
+        unit = crs.mapUnits()
+        if unit == Qgis.DistanceUnit.Degrees:
+            return 2.0 / 111319.49
+        elif unit == Qgis.DistanceUnit.Feet:
+            return 2.0 * 3.28084
+        else:
+            return 2.0
 
     def keyPressEvent(self, event):
-        if event.key() == KEY_DELETE:
+        if event.key() == Qt.Key.Key_Delete:
             if self.selected_idx is not None:
                 self._delete_selected()
             return
 
-        undo = (event.key() == KEY_BACKSPACE or
-                (event.key() == KEY_Z and event.modifiers() & MOD_CTRL))
+        undo = (event.key() == Qt.Key.Key_Backspace or
+                (event.key() == Qt.Key.Key_Z and event.modifiers() & Qt.KeyboardModifier.ControlModifier))
         if undo and self.current_points:
             self.current_points.pop()
             if len(self.current_points) >= 2:
@@ -724,7 +661,7 @@ class SequenceNumberingTool(QgsMapTool):
             self.canvas.refresh()
 
     def canvasPressEvent(self, event):
-        if event.button() != BTN_LEFT:
+        if event.button() != Qt.MouseButton.LeftButton:
             return
 
         point = self.toMapCoordinates(event.pos())
@@ -784,7 +721,7 @@ class SequenceNumberingTool(QgsMapTool):
             self._ignore_next_release = False
             return
 
-        if event.button() == BTN_LEFT:
+        if event.button() == Qt.MouseButton.LeftButton:
             if self._did_selection:
                 self._did_selection = False
                 return
@@ -799,7 +736,7 @@ class SequenceNumberingTool(QgsMapTool):
 
             self.current_points.append(point)
 
-        elif event.button() == BTN_MIDDLE:
+        elif event.button() == Qt.MouseButton.MiddleButton:
             tol = self._pixel_tolerance()
             for i, line_data in enumerate(self.finished_lines):
                 dist, _, _, _ = QgsGeometry.fromPolylineXY(
@@ -811,10 +748,10 @@ class SequenceNumberingTool(QgsMapTool):
                     self._sync_review_dialog() 
                     return
 
-        elif event.button() == BTN_RIGHT:
+        elif event.button() == Qt.MouseButton.RightButton:
             if len(self.current_points) >= 2:
                 
-                if self.layer.geometryType() == QgsWkbTypes.PointGeometry:
+                if self.layer.geometryType() == QgsWkbTypes.GeometryType.PointGeometry:
                     canvas_crs = self.canvas.mapSettings().destinationCrs()
                     layer_crs = self.layer.crs()
                     
@@ -830,8 +767,8 @@ class SequenceNumberingTool(QgsMapTool):
                     search_geom = QgsGeometry(canvas_geom)
                     try:
                         search_geom.transform(transform_to_layer)
-                    except Exception:
-                        pass
+                    except Exception as e:
+                        QgsMessageLog.logMessage(f"DrawSeq transform warning: {e}", "DrawSeq", Qgis.MessageLevel.Warning)
                     
                     bbox = search_geom.boundingBox()
                     bbox.setXMinimum(bbox.xMinimum() - dist_layer)
@@ -855,10 +792,10 @@ class SequenceNumberingTool(QgsMapTool):
                             continue
                         try:
                             geom.transform(transform_to_canvas)
-                        except Exception:
-                            pass
+                        except Exception as e:
+                            QgsMessageLog.logMessage(f"DrawSeq transform warning: {e}", "DrawSeq", Qgis.MessageLevel.Warning)
                         
-                        if geom.type() == QgsWkbTypes.PointGeometry:
+                        if geom.type() == QgsWkbTypes.GeometryType.PointGeometry:
                             pts = geom.asMultiPoint() if geom.isMultipart() else [geom.asPoint()]
                             for pt_canvas in pts:
                                 dist, snapped_pt, next_vertex, _ = canvas_geom.closestSegmentWithContext(pt_canvas)
@@ -892,7 +829,7 @@ class SequenceNumberingTool(QgsMapTool):
                 color     = self.get_next_distinct_color()
 
                 self.active_rubberband.setColor(color)
-                self.active_rubberband.setLineStyle(LINE_SOLID)
+                self.active_rubberband.setLineStyle(Qt.PenStyle.SolidLine)
 
                 vrb = self._make_vertex_rb()
                 for pt in self.current_points:
@@ -1006,8 +943,8 @@ class SequenceNumberingTool(QgsMapTool):
             if canvas_crs != layer_crs:
                 try:
                     layer_geom.transform(transform)
-                except Exception:
-                    pass
+                except Exception as e:
+                    QgsMessageLog.logMessage(f"DrawSeq transform warning: {e}", "DrawSeq", Qgis.MessageLevel.Warning)
 
             candidate_fids = spatial_index.intersects(layer_geom.boundingBox())
             matched = []
@@ -1032,7 +969,7 @@ class SequenceNumberingTool(QgsMapTool):
                 return 
 
             self.review_dlg = MultiLineDialog(line_data_results, self.canvas, self.layer, tool_ref=self)
-            self.review_dlg.setWindowFlags(self.review_dlg.windowFlags() | STAYS_ON_TOP)
+            self.review_dlg.setWindowFlags(self.review_dlg.windowFlags() | Qt.WindowType.WindowStaysOnTopHint)
             
             self.review_dlg.accepted.connect(lambda: self._commit_sequence_numbers(self.review_dlg._line_data, reuse=False))
             self.review_dlg.reuse_btn.clicked.connect(lambda checked=False: self._commit_sequence_numbers(self.review_dlg._line_data, reuse=True))
@@ -1052,7 +989,7 @@ class SequenceNumberingTool(QgsMapTool):
         
         idx = self.layer.fields().indexOf(target_field)
         if idx == -1:
-            new_field = QgsField(target_field, TYPE_STRING)
+            new_field = QgsField(target_field, QVariant.String)
             if self.layer.isEditable():
                 self.layer.addAttribute(new_field)
             else:
@@ -1101,9 +1038,9 @@ class SequenceNumberingTool(QgsMapTool):
                     val_str = f"{affix}{seq}" if prefix_mode else f"{seq}{affix}"
                     final_value = val_str
                 else:
-                    if field_type in (TYPE_INT, TYPE_UINT, TYPE_LONGLONG):
+                    if field_type in (QVariant.Int, QVariant.UInt, QVariant.LongLong):
                         final_value = int(seq)
-                    elif field_type == TYPE_DOUBLE:
+                    elif field_type == QVariant.Double:
                         final_value = float(seq)
                     else:
                         final_value = str(seq)
@@ -1156,7 +1093,7 @@ class SequenceNumberingTool(QgsMapTool):
         pal.fieldName = target_field
 
         text_fmt = QgsTextFormat()
-        text_fmt.setFont(QFont('Arial', 13, FONT_WEIGHT_BOLD))
+        text_fmt.setFont(QFont('Arial', 13, QFont.Weight.Bold))
         text_fmt.setSize(13)
         text_fmt.setColor(QColor('LightSeaGreen'))
 
@@ -1168,12 +1105,12 @@ class SequenceNumberingTool(QgsMapTool):
 
         bg = QgsTextBackgroundSettings()
         bg.setEnabled(True)
-        bg.setType(QgsTextBackgroundSettings.ShapeRectangle)
+        bg.setType(QgsTextBackgroundSettings.ShapeType.ShapeRectangle)
         bg.setFillColor(QColor('#A0A0A0'))
         bg.setStrokeColor(QColor('#606060'))
         bg.setStrokeWidth(0.3)
         bg.setOpacity(0.85)
-        bg.setSizeType(QgsTextBackgroundSettings.SizeBuffer)
+        bg.setSizeType(QgsTextBackgroundSettings.SizeType.SizeBuffer)
         bg.setSize(QSizeF(1.0, 0.5))
         text_fmt.setBackground(bg)
 
@@ -1191,8 +1128,8 @@ class SequenceNumberingTool(QgsMapTool):
         if getattr(self, 'review_dlg', None):
             try:
                 self.review_dlg.rejected.disconnect(self.cleanup)
-            except TypeError:
-                pass 
+            except TypeError as e:
+                QgsMessageLog.logMessage(f"DrawSeq disconnect info: {e}", "DrawSeq", Qgis.MessageLevel.Info) 
             self.review_dlg.close()
             self.review_dlg.deleteLater()
             self.review_dlg = None
